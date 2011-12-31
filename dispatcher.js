@@ -48,9 +48,9 @@ function writeFolderListing(req,res,p)
             }
             res.write(["<form method='get' action='", req.url, "'>",
                        "<input id='filename' name='filename' style='display:none'>",
-                       "<a href='javascript:;' onclick='",
-                           "document.getElementById(\"filename\").style.display=\"block\"'>",
-                       " ..new TiddlyWiki</a></form>"].join(''));
+                       "<a id='newBtn' style='font-family: arial' href='javascript:;' onclick='",
+                           "document.getElementById(\"filename\").style.display=\"block\";document.getElementById(\"newBtn\").style.display=\"none\"'>",
+                       "new TiddlyWiki.htm</a></form>"].join(''));
             res.end('</body>');
         }
     };
@@ -81,6 +81,12 @@ exports.dispatcher = function (req, res) {
                             console.log('cp ' + psf + '  ' + npn);
                             var tt = fs.readFileSync(psf,'utf8');    
                             fs.writeFileSync(npn,tt);
+							var reda = ['http://', req.headers.host, up.pathname == '/' ? '' : up.pathname, '/', encodeURIComponent(nfn)].join('');
+							console.log("Redirect to " + reda);
+							res.setHeader('Location', reda);
+							res.writeHead(302, 'your new file');
+							res.end();
+							return;
                         }
                         else
                             console.log(es.message);
@@ -90,6 +96,7 @@ exports.dispatcher = function (req, res) {
             }
         }
         catch (x) {
+			console.log(x.message);
             res.writeHead(404, fn + " not found");
             res.end("The server has no recollection of anything named " + fn);
         }
