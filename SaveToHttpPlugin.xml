@@ -1,0 +1,93 @@
+<div modified="20111226114755" modifier="Poul Staugaard" title="SaveToHttpPlugin" tags="systemConfig"><pre>/***
+|''Name:''|SaveToHttpPlugin|
+|''Description:''|Saves changes to http|
+|''Version:''|0.1.0|
+|''Date:''|Dec 26, 2011|
+|''Source:''|http://giewiki.appspot.com/|
+|''License:''|[[MIT open source license]]|
+|''~CoreVersion:''|2.4.1|
+|''Browser:''|Chrome; Safari; Firefox; InternetExplorer 6.0|
+***/
+//{{{
+var SaveToHttpPlugin = {
+  HttpRequest: function(data,args) {
+	var url = window.location.pathname;
+	var fields = [];
+	for (var a in args) {
+		var v = args[a];
+		if (!(v === undefined || typeof(v) == "function"))
+			fields.push(a + "=" + encodeURIComponent(v));
+	}
+	if (fields.length)
+		url += '?' + fields.join("&amp;")
+
+	var req;
+	try { req = new XMLHttpRequest(); }
+	catch (e) {
+		try { req = new ActiveXObject("Msxml2.XMLHTTP") }
+		catch (e) {
+			try { req = new ActiveXObject("Microsoft.XMLHTTP") }
+			catch (e) { return }
+		}
+	}
+
+	req.open(data ? "POST" : "GET", url, false);
+	req.send(data);
+	return req;
+  },
+  saveChangesToHttp: function(onlyIfDirty,tiddlers) {
+	try {
+		if(onlyIfDirty &amp;&amp; !store.isDirty())
+			return;
+		clearMessage();
+		var msg = config.messages;
+		var originalPath = document.location.toString();
+		var localPath = originalPath;
+		var save;
+		var original = SaveToHttpPlugin.HttpRequest("").responseText;
+		if(original == null) {
+			alert(msg.cantSaveError);
+			return;
+		}
+		var posDiv = locateStoreArea(original);
+		if(!posDiv) {
+			alert(msg.invalidFileError.format([localPath]));
+			return;
+		}
+		var revised = updateOriginal(original,posDiv,localPath);
+		save = SaveToHttpPlugin.HttpRequest(revised, { 
+				saveBackup: config.options.chkSaveBackups, 
+				backupFolder: config.options.txtBackupFolder } );
+		if (save.responseText)
+			displayMessage(save.responseText);
+		if(save.status == 200) // success
+			store.setDirty(false);
+		if(config.options.chkGenerateAnRssFeed &amp;&amp; saveRss instanceof Function)
+		{
+			var rss = convertUnicodeToFileFormat(generateRss());
+			save = SaveToHttpPlugin.HttpRequest(rss, { 
+					rss: true } );
+			if (save.responseText)
+				displayMessage(save.responseText);
+		}
+	} catch (ex) {
+		showException(ex);
+		return;
+	}	
+  }
+};
+  
+config.tasks.save.action = SaveToHttpPlugin.saveChangesToHttp;
+config.macros.saveChanges.onClick = function(e)
+{
+	SaveToHttpPlugin.saveChangesToHttp();
+	return false;
+};
+readOnly = false;
+
+if (window.location.search == '?debug=true')
+	debugger;
+else
+	store.removeTiddler('SaveToHttpPlugin');	
+//}}}
+</pre></div>
