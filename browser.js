@@ -5,5 +5,5 @@
 // URL:  http://giewiki.appspot.com/Tutorials/nodepad
 
 exports.command = process.env.USERPROFILE ?
-    '"' + process.env.USERPROFILE + '/Lokale Indstillinger/Application Data/Google/Chrome/Application/chrome.exe" --homepage ' :
+    '"' + process.env.USERPROFILE + '/Local Settings/Application Data/Google/Chrome/Application/chrome.exe" --homepage ' :
     "open '/Applications/Google Chrome.app' --args --homepage ";

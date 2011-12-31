@@ -1,6 +1,6 @@
 // this: dispatcher.js
 // does: Dispatches requests to a simple node.js server
-// ver.: 0.1.0
+// ver.: 0.2.2
 // by:   Poul Staugaard
 // URL:  http://giewiki.appspot.com/Tutorials/nodepad
 var url = require('url');
@@ -49,7 +49,7 @@ function writeFolderListing(req,res,p)
             res.write(["<form method='get' action='", req.url, "'>",
                        "<input id='filename' name='filename' style='display:none'>",
                        "<a id='newBtn' style='font-family: arial' href='javascript:;' onclick='",
-                           "document.getElementById(\"filename\").style.display=\"block\";document.getElementById(\"newBtn\").style.display=\"none\"'>",
+                           "var idfn = document.getElementById(\"filename\"); idfn.style.display=\"block\"; idfn.focus(); document.getElementById(\"newBtn\").style.display=\"none\"'>",
                        "new TiddlyWiki.htm</a></form>"].join(''));
             res.end('</body>');
         }
