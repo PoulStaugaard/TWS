@@ -66,7 +66,7 @@ exports.dispatcher = function (req, res) {
             fn = '.'; // list default directory
         try {
             var fi = fs.statSync(fn);
-            if (fi.size == 0) {
+            if (fi.isDirectory()) {
                 if (up.query && up.query.filename)
                 {
                     var nfn = decodeURIComponent(up.query.filename) + '.htm';
