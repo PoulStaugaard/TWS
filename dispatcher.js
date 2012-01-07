@@ -1,6 +1,6 @@
 // this: dispatcher.js
 // does: Dispatches requests to a simple node.js server
-// ver.: 0.2.2
+// ver.: 0.2.5
 // by:   Poul Staugaard
 // URL:  http://giewiki.appspot.com/Tutorials/nodepad
 var url = require('url');
@@ -8,6 +8,8 @@ var fs = require('fs');
 
 function MimeTypeFromFileType(ft)
 {
+    var dflt = { value: 'text/html', encoding: 'utf8' };
+
     if (ft) switch (ft.toLowerCase())
     {
     case 'ico':
@@ -21,8 +23,13 @@ function MimeTypeFromFileType(ft)
         return { value: 'application/pdf', encoding: false };
     case 'png':
         return { value: 'image/png', encoding: false };
+    case 'htm':
+    case 'html':
+        dflt.xform = require('./tw-patcher.js').patch;
+    case 'md':
+        dflt.xform = require('./md-xformer.js').xform;
     }
-    return { value: 'text/html', encoding: 'utf8' };
+    return dflt;
 }
 
 function writeFolderListing(req,res,p)
@@ -81,12 +88,12 @@ exports.dispatcher = function (req, res) {
                             console.log('cp ' + psf + '  ' + npn);
                             var tt = fs.readFileSync(psf,'utf8');    
                             fs.writeFileSync(npn,tt);
-							var reda = ['http://', req.headers.host, up.pathname == '/' ? '' : up.pathname, '/', encodeURIComponent(nfn)].join('');
-							console.log("Redirect to " + reda);
-							res.setHeader('Location', reda);
-							res.writeHead(302, 'your new file');
-							res.end();
-							return;
+                            var reda = ['http://', req.headers.host, up.pathname == '/' ? '' : up.pathname, '/', encodeURIComponent(nfn)].join('');
+                            console.log("Redirect to " + reda);
+                            res.setHeader('Location', reda);
+                            res.writeHead(302, 'your new file');
+                            res.end();
+                            return;
                         }
                         else
                             console.log(es.message);
@@ -96,24 +103,25 @@ exports.dispatcher = function (req, res) {
             }
         }
         catch (x) {
-			console.log(x.message);
+            console.log(x.message);
             res.writeHead(404, fn + " not found");
             res.end("The server has no recollection of anything named " + fn);
         }
-        var ftPos = fn.lastIndexOf('.') + 1;
+        var ftPos = fn.lastIndexOf('.') + 1; // location in fn of the filetype 
         if (!up.search || up.query.debug)
         {
             var mt = MimeTypeFromFileType(ftPos ? fn.substring(ftPos) : false);
             res.setHeader('Content-Type', mt.value);
             console.log("request: " + fn);
+            var transformers = 
             fs.readFile(fn,mt.encoding,
                 function(err,data) {
                     if (err) {
                         res.writeHead(404, fn + " not found");
                         res.end("No such file: " + fn );
                     }
-                    else if (mt.value == 'text/html')
-                        res.end(require('./tw-patcher.js').patch(fn,data));
+                    else if (mt.xform) // Transformation required ?
+                        res.end(mt.xform(fn,data));
                     else 
                         res.end(data);
             });
