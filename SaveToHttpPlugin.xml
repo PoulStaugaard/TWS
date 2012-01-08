@@ -3,7 +3,7 @@
 |''Description:''|Saves changes to http|
 |''Version:''|0.1.0|
 |''Date:''|Dec 26, 2011|
-|''Source:''|http://giewiki.appspot.com/|
+|''Source:''|http://github.com/PoulStaugaard/TWS|
 |''License:''|[[MIT open source license]]|
 |''~CoreVersion:''|2.4.1|
 |''Browser:''|Chrome; Safari; Firefox; InternetExplorer 6.0|
@@ -83,11 +83,18 @@ config.macros.saveChanges.onClick = function(e)
 	SaveToHttpPlugin.saveChangesToHttp();
 	return false;
 };
+
+function autoSaveChanges(onlyIfDirty,tiddlers)
+{
+	if(config.options.chkAutoSave)
+		SaveToHttpPlugin.saveChangesToHttp();
+}
+
 readOnly = false;
 
 if (window.location.search == '?debug=true')
-	debugger;
-else
+	debugger; // break here, but not removing it (as normal) currently
+else          //  does not allow you to edit this in the browser
 	store.removeTiddler('SaveToHttpPlugin');	
 //}}}
 </pre></div>

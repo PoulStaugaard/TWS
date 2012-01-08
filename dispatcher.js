@@ -63,7 +63,7 @@ exports.dispatcher = function (req, res) {
 		if (rq.up.search == '')		
 			return files.handler(rq);
 		else if (!query.handler(rq, { 
-			debug: files.handler
+			debug: files.handler // allow a ?debug=true flag to be passed to the browser script
 			}))
         {
             res.writeHead(500,"Error");
