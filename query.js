@@ -6,7 +6,7 @@
 
 var fs = require('fs');
 
-exports.handler = function(rq, handlers) {
+function fileHandler(rq, handlers) {
 	var query = rq.up.query;
 	if (query.rss == 'true')
 	{
@@ -29,7 +29,7 @@ exports.handler = function(rq, handlers) {
 	}
 	else if (query.saveBackup !== undefined)
 	{
-		var bodyparts = [];                
+		var bodyparts = [];
 		rq.req.on('end',
 			function() {
 				console.log("end " + rq.req.url);
@@ -77,22 +77,60 @@ exports.handler = function(rq, handlers) {
 			return handlers[a](rq);
 	}
 
-	console.log("Unknown query:");
-	console.dir(query);
+	return false;
+}
+
+function folderHandler(rq)
+{
+	var query = rq.up.query;
+	if (query.filename) { // create a new file..?
+		var nfn = decodeURIComponent(query.filename) + '.htm';
+		var npn = rq.fn + '/' + nfn;
+		try {
+			var nsr = fs.statSync(npn);
+			rq.res.writeHead(403, 'Such a file already exists');
+			rq.res.end(npn + " is an existing file!");
+			return true;
+		} catch (es) {
+			if (es.message.substring(0,6) == 'ENOENT') { // OK, it doesn't already exist
+				var psf = require.resolve('./empty.html');
+				console.log('cp ' + psf + '  ' + npn);
+				var tt = fs.readFileSync(psf,'utf8');
+				fs.writeFileSync(npn,tt);
+				var reda = ['http://', rq.req.headers.host, rq.up.pathname == '/' ? '' : rq.up.pathname, '/', encodeURIComponent(nfn)].join('');
+				console.log("Redirect to " + reda);
+				rq.res.setHeader('Location', reda);
+				rq.res.writeHead(302, 'your new file');
+				rq.res.end();
+				return true;
+			}
+			else {
+				rq.res.writeHead(403, 'Bad filename');
+				rq.res.end("The filename " + npn + " is not allowed!");
+				console.log(es.message);
+				return true;
+			}
+		}
+	}
 	return false;
 }
 
 // Convert a date to UTC YYYYMMDD.HHMMSSMMM string format
 Date.prototype.convertToYYYYMMDDHHMMSSMMM = function()
 {
-    return this.getUTCFullYear() + String.zeroPad(this.getUTCMonth()+1,2) + String.zeroPad(this.getUTCDate(),2) + "." + String.zeroPad(this.getUTCHours(),2) + String.zeroPad(this.getUTCMinutes(),2) + String.zeroPad(this.getUTCSeconds(),2) + String.zeroPad(this.getUTCMilliseconds(),3) +"0";
+	return this.getUTCFullYear() + String.zeroPad(this.getUTCMonth()+1,2) + String.zeroPad(this.getUTCDate(),2) + "." + String.zeroPad(this.getUTCHours(),2) + String.zeroPad(this.getUTCMinutes(),2) + String.zeroPad(this.getUTCSeconds(),2) + String.zeroPad(this.getUTCMilliseconds(),3) +"0";
 };
 
 // Static method to left-pad a string with 0s to a certain width
 String.zeroPad = function(n,d)
 {
-    var s = n.toString();
-    if(s.length < d)
-        s = "000000000000000000000000000".substr(0,d-s.length) + s;
-    return s;
+	var s = n.toString();
+	if(s.length < d)
+		s = "000000000000000000000000000".substr(0,d-s.length) + s;
+	return s;
+};
+
+exports.handlers = {
+	file: fileHandler,
+	folder: folderHandler
 };
