@@ -9,6 +9,9 @@ var fs = require('fs');
 var folder = require('./folder.js').folder;
 var files = require('./files.js');
 var query = require('./query.js');
+var tws = require('./tws.js');
+
+var admin = '.tws/';
 
 function RequestData(req,res)
 {
@@ -21,39 +24,54 @@ function RequestData(req,res)
 }
 
 exports.dispatcher = function (req, res) {
-    try {
-        console.log('URL: ' + req.url);
-		var rq = new RequestData(req,res);
+	try {
+		var rq = new RequestData(req, res);
+		console.log('URL: ' + req.url + '\n' + rq.fn);
 
-        try {
-            var fi = fs.statSync(rq.fn);
-            if (fi.isDirectory()) {
+		try {
+			var fi = fs.statSync(rq.fn);
+			if (fi.isDirectory()) {
 				if (rq.up.search == '')
 					return folder.list(rq);
-                else if (query.handlers.folder(rq))
+				else if (query.handlers.folder(rq))
 					return;
-            }
+			}
 			else { // It's a file request
 				if (rq.up.search == '')
 					return files.handler(rq);
-				else if (query.handlers.file(rq, { 
-							debug: files.handler // allow a ?debug=true flag to be passed to the browser script
-					}))
+				else if (query.handlers.file(rq, {
+					debug: files.handler // allow a ?debug=true flag to be passed to the browser script
+				}))
 					return;
 			}
 			console.log("Unknown query received:");
 			console.dir(rq.up.query);
 			res.writeHead(400, "invalid query");
 			res.end("Query not supported: " + rq.up.search);
-        }
-        catch (x) {
-			// Not a file system object, perhaps a dynamic resource request (NYI) ?
-            console.log(x.message);
-            res.writeHead(404, rq.fn + " not found");
-            res.end("The server has no recollection of anything named " + rq.fn);
-        }
-    } catch (e) {
-        res.writeHead(500, {'Content-Type': 'text/plain'});
-        res.end("Server error: " + e.message);
-    }
+		}
+		catch (x) {
+			// Not a file system object, perhaps a command or dynamic resource request (NYI) ?
+			if (rq.fn.startsWith(admin)) {
+				var cmd = rq.fn.substring(admin.length).split(':');
+				var verb = cmd[0];
+				var arg = cmd.slice(1).join(':');
+				console.log("Cmd: " + verb);
+				if (verb == 'browse') {
+					tws.browse(arg);
+					return res.end("Browsing " + arg);
+				}
+				return res.end("NYI");
+			}
+			console.log(x.message);
+			res.writeHead(404, rq.fn + " not found");
+			res.end("The server has no recollection of anything named " + rq.fn);
+		}
+	} catch (e) {
+		res.writeHead(500, { 'Content-Type': 'text/plain' });
+		res.end("Server error: " + e.message);
+	}
+};
+
+String.prototype.startsWith = function (prefix) {
+	return !prefix || this.substring(0, prefix.length) == prefix;
 };

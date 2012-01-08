@@ -23,7 +23,7 @@ exports.folder = {
 						  fullpath, '</h3>\n'].join('') );
 				for (var i = 0; i < dl.length; i++)
 				{
-					rq.res.write(['<a href="', encodeURIComponent(rq.fn), '/', 
+					rq.res.write(['<a href="/', encodeURIComponent(rq.fn), '/',
 							   encodeURIComponent(dl[i]), '">', dl[i], '</a>'
 							  ].join(''));
 					rq.res.write('<br/>\n');
