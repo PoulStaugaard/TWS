@@ -18,7 +18,7 @@ exports.folder = {
 			else {
 				rq.res.setHeader('Content-Type', 'text/html');
 				var fullpath = fs.realpathSync(rq.fn);
-				rq.res.write(['<html><head><title>', fullpath, 
+				rq.res.write(['<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8" /><title>', fullpath, 
 						  '</title></head><body style="font-family:courier"><h3>', 
 						  fullpath, '</h3>\n'].join('') );
 				for (var i = 0; i < dl.length; i++)
