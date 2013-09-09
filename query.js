@@ -59,7 +59,9 @@ function fileHandler(rq, handlers) {
 					fs.renameSync(rq.fn,bfn);
 					console.log( "renamed " + rq.fn + ' to ' + bfn);
 				}
-				fs.writeFileSync(rq.fn,bodyparts.join(''));
+				var content = bodyparts.join('');
+				content = new Buffer(content, 'ascii').toString('utf8');
+				fs.writeFileSync(rq.fn,content);
 				bodyparts = null;
 				console.log("Wrote " + rq.fn);
 				rq.res.writeHead(200,"OK");
