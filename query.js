@@ -60,7 +60,9 @@ function fileHandler(rq, handlers) {
 					console.log( "renamed " + rq.fn + ' to ' + bfn);
 				}
 				var content = bodyparts.join('');
-				content = new Buffer(content, 'ascii').toString('utf8');
+				var headers = rq.req.headers["user-agent"];
+                if (headers && headers.indexOf('Firefox') >= 0)
+    				content = new Buffer(content, 'ascii').toString('utf8');
 				fs.writeFileSync(rq.fn,content);
 				bodyparts = null;
 				console.log("Wrote " + rq.fn);

@@ -7,8 +7,11 @@
 var fs = require('fs');
 
 exports.handler = function(rq) {
-	var mt = filetypes.find(rq.ftPos ? rq.fn.substring(rq.ftPos) : false);
-	rq.res.setHeader('Content-Type', mt.value);
+    var mt = filetypes.find(rq.ftPos ? rq.fn.substring(rq.ftPos) : false);
+    var content = mt.value;
+    if (mt.encoding)
+        content = content + "; charset=" + mt.encoding;
+	rq.res.setHeader('Content-Type', content);
 	console.log("request: " + rq.fn);
 	fs.readFile(rq.fn,mt.encoding,
 		function(err,data) {
@@ -27,7 +30,7 @@ exports.handler = function(rq) {
 var filetypes = {
 	find: function(ft)
 	{
-		var dflt = { value: 'text/html', encoding: 'utf8' };
+		var dflt = { value: 'text/html', encoding: 'utf-8' };
 
 		if (ft) switch (ft.toLowerCase())
 		{
@@ -43,7 +46,7 @@ var filetypes = {
 		case 'png':
 			return { value: 'image/png', encoding: false };
 		case 'xml':
-			return { value: 'application/rss+xml', encoding: 'utf8' };
+			return { value: 'application/rss+xml', encoding: 'utf-8' };
 			
 		case 'htm':
 		case 'html':
